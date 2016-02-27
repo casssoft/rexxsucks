@@ -1,0 +1,59 @@
+badtestcase = '(+ (+ 2 4) (+ 1 2))'
+goodtestcase = '(+ 5 (+ 1 2))'
+
+call pinterp badtestcase
+say "FINAL: " result
+
+return
+
+pinterp : procedure
+  exp = arg(1)
+  say "10: " exp
+  parse value exp with first '(' rest
+  say "12: " first 
+  say "13: " rest
+  if (rest == '') then
+    do
+      /* we are in the deep expression */
+      parse value first with inner ')' leftovers
+      say "18:" inner
+      say "19:" leftovers
+      call interp inner
+      return result leftovers
+    end
+  else
+    do
+      say "25: " rest
+      call pinterp rest
+      new_exp = first result
+      say "28 new_exp: " new_exp
+      parse value new_exp with before ')' after
+      say "31 before: " before
+      say "32 after: " after
+      if (before <> '') then
+        do
+          say "interping before"
+          call interp before
+          return result
+        end
+      else
+        do
+          say 'hello'
+          call interp first 
+          return result after
+        end
+    end
+
+
+interp: procedure
+    inner = arg(1)
+    if (word(inner, 1) == '+') then
+      do
+        say "its plus"
+        return word(inner, 2) + word(inner, 3)
+      end
+    else
+      do
+        return inner
+      end
+

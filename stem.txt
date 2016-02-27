@@ -1,0 +1,14 @@
+outer.0 = 3
+outer.1 = 1
+outer.2 = 2
+outer.3 = 3
+
+inner.0 = 2
+inner.1 = 1
+call subr 
+exit
+subr: procedure expose outer.
+  do i = 1 to outer.0
+    say outer.i
+  end
+return

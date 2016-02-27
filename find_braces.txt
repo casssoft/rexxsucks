@@ -1,0 +1,60 @@
+testcase = "(+ 1 2)"
+testcase2 = "(+ (+ 1 2) (+ 5 6))"
+testcase2 = "(+ 1 (+ 5 6))"
+
+currentstring = testcase2
+
+allfunctions.0.0 = "a b"
+allfunctions.0.1 = "(+ a b)"
+sizeoffunctions = 1
+
+call get_braces 1
+
+say "FINAL:" result
+return
+
+get_braces: procedure expose currentstring
+  startindex = arg(1)
+  say startindex
+  say currentstring
+  say "wordPos" wordPos("(", currentstring)
+  say "wordPos" wordPos(")", currentstring)
+  mismatch = 1
+  do while (mismatch <> 0)
+    startindex += 1
+    say "mismatch" mismatch
+    say "startindex" startindex
+    left_brace_idx = wordPos("(", subStr(currentstring, startindex)) + startindex
+    right_brace_idx = wordPos(")", subStr(currentstring, startindex)) + startindex
+
+    say "left_brace_idx:" left_brace_idx
+    say "right_brace_idx:" right_brace_idx
+
+    /* If the left brace isn't found, then decrement mismatch */
+    if (left_brace_idx == 0) then
+      do
+        startindex = right_brace_idx
+        mismatch -= 1
+      end
+    /* If we find a left brace before the right, increment mismatch */
+    else if (left_brace_idx < right_brace_idx) then
+      do
+        startindex = left_brace_idx
+        mismatch += 1
+      end
+    else
+      do
+        startindex = right_brace_idx
+        mismatch -= 1
+      end
+  end
+
+  say "endindex:" startindex
+  /*
+  parse firstword
+  indentCount = 1
+  curindex = startindex + 1
+  do forever
+    
+  wordPos(newarg, "(", 'M', 1)
+  */

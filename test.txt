@@ -1,0 +1,14 @@
+testcase = '(+ 1 2)'
+
+  /* main program */
+  do n=1 to 5
+    call factorial n
+    say 'The factorial of' n 'is:' RESULT
+    end
+  return
+
+  factorial : procedure
+    n = arg(1)
+    if n = 1 then
+      return 1
+    return n * factorial( n - 1 )
