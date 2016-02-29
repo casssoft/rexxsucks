@@ -64,10 +64,12 @@ fetch_env : procedure
 
 
 run_program : procedure
-  current_program = arg(1)  
+  current_program = arg(1)
+  /* test function to illustrate how functions can be stored*/  
   allfunctions.0.0 = "a b"
   allfunctions.0.1 = "(+ a b)"
   sizeoffunctions = 1
+
   output = pinterp(1)
   if(output == "") then
     return ""
@@ -86,29 +88,39 @@ run_program : procedure
 pinterp : procedure expose current_program allfunctions. sizeoffunctions
   startindex = arg(1)
   say "pinterp: startindex: " startindex
+  /* get the first symbol at the start index*/
   firstsymbol = word(current_program, startindex)
+  /* does it start with ( for example "(+" or
+  not like "4"*/
   parse value firstsymbol with "(" op
   if (op == '') then
     do
-      /* or look up in env */
+      /*It does not start with (
+      which means it can't be an operator
+      or a function call */
       say "no op, firstsymbol: " firstsymbol
       nextindex = startindex + 1
       say "returning"
+      /* Assume it is a number because var looks aren't implemented */
       parse value firstsymbol with number ")"
+      /* Return the value and the next word index in current_program*/
       return number nextindex
     end
   else
+    /* Must be an operator or function call or func keyword*/
     do
       if (op == "+") then
         do
-          say "yes plus"
-          
+          say "We must plus"
+          /* evaluate it's two arguments by calling pinterp */
           call pinterp startindex + 1
           firstvalue = word(result, 1)
           nextindex = word(result, 2)
           call pinterp nextindex
           secondvalue = word(result, 1)
           nextindex = word(result, 2)
+
+          /*add them and return the value */
           newvalue = firstvalue + secondvalue
           return newvalue nextindex
         end
@@ -119,6 +131,8 @@ pinterp : procedure expose current_program allfunctions. sizeoffunctions
           /* (func (a b c) */
           firstarg = word(current_program, startindex + 1)
           parse value firstarg with "(" fargname
+          /* Check for case where firstarg is ()
+          and therefore there is no arguments*/
           if (fargname == ")") then
             do
               allfunctions.sizeoffunctions.0 = ""
@@ -127,8 +141,12 @@ pinterp : procedure expose current_program allfunctions. sizeoffunctions
             do
               allfunctions.sizeoffunctions.0 = fargname
               argwordindex = startindex + 2
+              /*Get the rest of the arg names*/
               do forever
                 newarg = word(current_program, argwordindex)
+
+                /* If there is an ending brace in this word
+                it means that it is the end of arglist */
                 isbrace = verify(newarg, ")", 'M', 1)
                 if (isbrace <> 0) then
                   do
@@ -136,12 +154,17 @@ pinterp : procedure expose current_program allfunctions. sizeoffunctions
                     allfunctions.sizeoffunctions.0 = allfunctions.sizeoffunctions.0 argname
                     leave
                   end
+                /* Otherwise add not last arg and keep iterating */
                 allfunctions.sizeoffunctions.0 = allfunctions.sizeoffunctions.0 newarg
                 argwordindex = argwordindex + 1
               end
             end
+           /* the rest of func is not implemented */
+           return "ERROR:NOT_IMPLEMENTED"
+
         end
       else
+        /* the other operators are not implemented */
         return "ERROR:NOT_IMPLEMENTED"
     end
     return ""
