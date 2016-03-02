@@ -1,14 +1,5 @@
 test_counter = 0
 
-/* Test run_program */
-assert_equal(run_program("(+ 1 2)"), "3")
-assert_equal(run_program("(+ (+ 1 2) (+ 5 6))"), "14")
-assert_equal(run_program("(+ 1 (+ 5 6))"), "12")
-assert_equal(run_program("(+ 1 (+ 5 ))"), "Incorrect operator usage")
-assert_equal(run_program("(- 3 2)"), "1")
-assert_equal(run_program("((func (a b) (+ a b)) 1 2)"), "3")
-assert_equal(run_program("((func (a b c) (+ a (+ b c))) 1 2 3)"), "6")
-
 /* Test make_env */
 assert_equal(make_env(), "")
 
@@ -37,6 +28,15 @@ assert_equal(findEndOfExpr("() (5 )) (", 1), 1)
 assert_equal(findEndOfExpr("+ 1 2) )", 1), -1)
 assert_equal(findEndOfExpr("(+ 1 2", 1), 0)
 
+/* Test run_program */
+assert_equal(run_program("(+ 1 2)"), "3")
+assert_equal(run_program("(+ (+ 1 2) (+ 5 6))"), "14")
+assert_equal(run_program("(+ 1 (+ 5 6))"), "12")
+assert_equal(run_program("(+ 1 (+ 5 ))"), "Incorrect operator usage")
+assert_equal(run_program("(- 3 2)"), "1")
+assert_equal(run_program("((func (a b) (+ a b)) 1 2)"), "3")
+assert_equal(run_program("((func (a b c) (+ a (+ b c))) 1 2 3)"), "6")
+
 return
 
 /* Accepts two strings as arguments and compares their values directly and
@@ -51,43 +51,6 @@ assert_equal : procedure expose test_counter
   else
     say "TEST" test_counter "FAILED:" arg(1) "!=" arg(2)
   return ""
-
-
-/* Returns an empty environment 
- * make_env()
- */
-make_env : procedure
-  return ""
-
-/* Appends a binding to the environment 
- * append_env(current_env, identifier, value) 
- */
-append_env : procedure
-  old_env = arg(1)
-  id = arg(2)
-  val = arg(3)
-  return id val old_env
-
-/* Fetches the value of an identifier from the env 
- * fetch_env(current_env, identifier) 
- */
-fetch_env : procedure
-  current_env = arg(1)
-  search_id = arg(2)
-  /* perform a search in the env */
-  found_pos = Wordpos(search_id, current_env)
-  if (found_pos == 0) then
-    /* nothing was found */
-    return ""
-  else do
-    if (found_pos // 2 == 0) then do
-      /* found a value instead of a key, keep searching */
-      return fetch_env(Subword(current_env, found_pos + 1), search_id)
-    end
-    else
-      /* found the desired key and corresponding value */
-      return word(current_env, found_pos + 1)
-  end
 
 /* Pinterps the input expression and outputs its resultant value.
  * run_program(string)
@@ -105,59 +68,6 @@ run_program : procedure
     return ""
   else
     return word(pinterp(1), 1)
-
-/* Function that returns the number of times a specified symbol appears in a
- * word.
- * countSymbol(word, symbol)
- */
-countSymbol: procedure
-  parse arg word, symbol
-  length = wordLength(word, 1)
-  charIndex = 1
-  count = 0
-
-  do while (charIndex <= length)
-    char = subStr(word, charIndex, 1)
-    if (verify(char, symbol, 'M', 1) == 1) then
-      count += 1
-    charIndex += 1
-  end
-
-  return count
-
-/* Function that takes an expression enclosed in braces as an input argument
- * as well as an index into that string to a word that includes a left open
- * parenthesis. The function then finds the matching right parenthesis and
- * returns its word index to the caller. If no matching right parenthesis is
- * found in the inputString then 0 is returned. If the first word in the input
- * string does not have a left parenthesis then a -1 is returned.
- * findEndOfExpr(inputString, wordIndex)
- */
-findEndOfExpr: procedure
-  parse arg inputString, startIndex
-
-  /* Check to see if the first word contains a left parenthesis. */
-  if (abbrev(inputString, '(', 1) <> 1) then
-    return -1
-
-  wordCount = words(inputString)
-  wordIndex = startIndex
-  matched = 0
-
-  /* Loop until the matching close brace is found. */
-  do while (wordIndex <= wordCount)
-    word = word(inputString, wordIndex)
-
-    matched += countSymbol(word, "(")
-    matched -= countSymbol(word, ")")
-
-    if (matched <= 0) then
-      return wordIndex
-
-    wordIndex += 1
-  end
-
-  return 0
 
 /* Parses the input string and interprets the results. Currently only binops
  * are supported, with functions being close to being implemented.
@@ -251,3 +161,92 @@ pinterp : procedure expose current_program allfunctions. sizeoffunctions
         return "ERROR:NOT_IMPLEMENTED"
     end
     return ""
+
+/* Function that returns the number of times a specified symbol appears in a
+ * word.
+ * countSymbol(word, symbol)
+ */
+countSymbol: procedure
+  parse arg word, symbol
+  length = wordLength(word, 1)
+  charIndex = 1
+  count = 0
+
+  do while (charIndex <= length)
+    char = subStr(word, charIndex, 1)
+    if (verify(char, symbol, 'M', 1) == 1) then
+      count += 1
+    charIndex += 1
+  end
+
+  return count
+
+/* Function that takes an expression enclosed in braces as an input argument
+ * as well as an index into that string to a word that includes a left open
+ * parenthesis. The function then finds the matching right parenthesis and
+ * returns its word index to the caller. If no matching right parenthesis is
+ * found in the inputString then 0 is returned. If the first word in the input
+ * string does not have a left parenthesis then a -1 is returned.
+ * findEndOfExpr(inputString, wordIndex)
+ */
+findEndOfExpr: procedure
+  parse arg inputString, startIndex
+
+  /* Check to see if the first word contains a left parenthesis. */
+  if (abbrev(inputString, '(', 1) <> 1) then
+    return -1
+
+  wordCount = words(inputString)
+  wordIndex = startIndex
+  matched = 0
+
+  /* Loop until the matching close brace is found. */
+  do while (wordIndex <= wordCount)
+    word = word(inputString, wordIndex)
+
+    matched += countSymbol(word, "(")
+    matched -= countSymbol(word, ")")
+
+    if (matched <= 0) then
+      return wordIndex
+
+    wordIndex += 1
+  end
+
+  return 0
+
+/* Returns an empty environment 
+ * make_env()
+ */
+make_env : procedure
+  return ""
+
+/* Appends a binding to the environment 
+ * append_env(current_env, identifier, value) 
+ */
+append_env : procedure
+  old_env = arg(1)
+  id = arg(2)
+  val = arg(3)
+  return id val old_env
+
+/* Fetches the value of an identifier from the env 
+ * fetch_env(current_env, identifier) 
+ */
+fetch_env : procedure
+  current_env = arg(1)
+  search_id = arg(2)
+  /* perform a search in the env */
+  found_pos = Wordpos(search_id, current_env)
+  if (found_pos == 0) then
+    /* nothing was found */
+    return ""
+  else do
+    if (found_pos // 2 == 0) then do
+      /* found a value instead of a key, keep searching */
+      return fetch_env(Subword(current_env, found_pos + 1), search_id)
+    end
+    else
+      /* found the desired key and corresponding value */
+      return word(current_env, found_pos + 1)
+  end
